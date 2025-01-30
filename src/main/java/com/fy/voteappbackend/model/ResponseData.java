@@ -18,8 +18,8 @@ public class ResponseData<T> {
         return new ResponseData<>(data, message);
     }
 
-    public static <T> ResponseData<T> fail(String message, int code) {
-        ResponseData<T> responseData = new ResponseData<T>();
+    public static ResponseData<Object> fail(String message, int code) {
+        ResponseData<Object> responseData = new ResponseData<>();
         responseData.setCode(code);
         responseData.setMessage(message);
         responseData.setStatus(false);
