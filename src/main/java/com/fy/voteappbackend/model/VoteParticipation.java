@@ -1,9 +1,13 @@
 package com.fy.voteappbackend.model;
 
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 @Data
+@TableName("vote_participation")
 public class VoteParticipation {
-    private int uid;
-    private int vote_id;
+    @TableId("uid")
+    private Integer uid;
+    private Integer vote_id;
 }
