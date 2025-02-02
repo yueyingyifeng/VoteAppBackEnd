@@ -1,7 +1,7 @@
 package com.fy.voteappbackend.model;
 
 import lombok.Data;
-
+@Deprecated
 @Data
 public class ResponseData<T> {
 
