@@ -5,6 +5,6 @@ import lombok.Data;
 @Data
 public class User {
     long uid;
-    String pwd;
-    long phone;
+    String psw;
+    String phone;
 }

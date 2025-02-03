@@ -12,4 +12,16 @@ public class GeneralResponse {
     String err;
 
     JSONObject data;
+
+    public GeneralResponse makeResponse(String type, String err){
+        this.timeStamp = System.currentTimeMillis();
+        this.type=type;
+        this.err=err;
+        return this;
+    }
+
+    public GeneralResponse addData(JSONObject data){
+        this.data = data;
+        return this;
+    }
 }
