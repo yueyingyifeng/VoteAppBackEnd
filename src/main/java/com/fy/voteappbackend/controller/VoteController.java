@@ -145,6 +145,10 @@ public class VoteController {
         return ResponseData.ok(votes,"200");
     }
 
+    /**
+     * 获取最高赞数投票项
+     * @return
+     */
     @ResponseBody
     @GetMapping("/get_mostHot_vote_item_list")
     public ResponseData<Object> getMostHotVoteItemList(){
