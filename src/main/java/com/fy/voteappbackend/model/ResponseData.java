@@ -1,8 +1,11 @@
 package com.fy.voteappbackend.model;
 
 import lombok.Data;
+import org.springframework.stereotype.Component;
 
+@Deprecated
 @Data
+@Component
 public class ResponseData<T> {
 
     private Boolean status = true;
