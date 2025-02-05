@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Random;
 
 @RestController
@@ -43,7 +44,7 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public GeneralResponse register(@RequestBody GeneralRequest<User> request){
+    public GeneralResponse register(@RequestBody GeneralRequest<User> request) throws UnsupportedEncodingException {
         User user = request.getData();
         GeneralResponse response = new GeneralResponse();
         if(user == null)

@@ -11,6 +11,7 @@ import com.fy.voteappbackend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,14 +42,18 @@ public class UserServiceImpl implements UserService {
             return "none";
         }
 
-        return generateToken(new User(){{
-            setUid(userInfo.getUid());
-            setPhone(user.getPhone());
-        }});
+        try {
+            return generateToken(new User(){{
+                setUid(userInfo.getUid());
+                setPhone(user.getPhone());
+            }});
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
-    public String register(User user) {
+    public String register(User user) throws UnsupportedEncodingException {
         if (user == null || user.getPhone() == null || user.getPsw() == null)
             return null;
 
@@ -79,7 +84,7 @@ public class UserServiceImpl implements UserService {
         }});
     }
 
-    private String generateToken(User user){
+    private String generateToken(User user) throws UnsupportedEncodingException {
         if (user == null)
             return null;
 

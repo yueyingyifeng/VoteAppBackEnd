@@ -5,6 +5,7 @@ import com.auth0.jwt.JWTCreator;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Calendar;
 import java.util.Map;
 
@@ -15,7 +16,7 @@ public class JWTUtils {
      */
     private static final String SING = "XIAOSHUANG";
 
-    public static String getToken(Map<String, String> map) {
+    public static String getToken(Map<String, String> map) throws UnsupportedEncodingException {
 
         Calendar instance = Calendar.getInstance();
         // 默认7天过期
@@ -36,14 +37,14 @@ public class JWTUtils {
     /**
      * 验证token  合法性
      */
-    public static DecodedJWT verify(String token) {
+    public static DecodedJWT verify(String token) throws UnsupportedEncodingException {
         return JWT.require(Algorithm.HMAC256(SING)).build().verify(token);
     }
 
     /**
      * 获取token信息方法
      */
-    public static DecodedJWT getTokenInfo(String token){
+    public static DecodedJWT getTokenInfo(String token) throws UnsupportedEncodingException {
         DecodedJWT verify = JWT.require(Algorithm.HMAC256(SING)).build().verify(token);
         return verify;
     }
