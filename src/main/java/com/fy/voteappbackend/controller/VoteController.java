@@ -7,6 +7,8 @@ import com.fy.voteappbackend.model.VoteParticipation;
 import com.fy.voteappbackend.model.Votes;
 import com.fy.voteappbackend.service.VoteCountsService;
 import com.fy.voteappbackend.service.VoteParticipationService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,6 +23,7 @@ import java.util.List;
 public class VoteController {
 
 
+    private static final Logger log = LoggerFactory.getLogger(VoteController.class);
     @Autowired
     private VotesService votesService;
 
@@ -36,7 +39,11 @@ public class VoteController {
      */
     @ResponseBody
     @PostMapping("/add")
-    public ResponseData<Integer> addVote(String title, String content, String vote_item, Boolean Public, Integer processVisible ,MultipartFile picture) throws IOException {
+    public ResponseData<Integer> addVote(String title, String content, String[] vote_item, String Public, Integer processVisible ,MultipartFile picture) throws IOException {
+                                                                        // TODO: vote_item 中文乱码问题
+//        log.info("Title: {}, Content: {}, Vote Item: {}, Public: {}, Process Visible: {}",
+//                title, content, vote_item, Public, processVisible);
+
 
         //存储图片并返回存储路径
         String picturePath = PictureTools.savePicture(picture);
@@ -48,8 +55,8 @@ public class VoteController {
         Votes votes = new Votes();
         votes.setTitle(title);
         votes.setContent(content);
-        votes.setVoteItem(vote_item);
-        votes.setPublic(Public);
+        votes.setVoteItem("none");
+        votes.setPublic(Boolean.valueOf(Public));
         votes.setProcessVisible(processVisible);
         votes.setPicturePath(picturePath);
 
