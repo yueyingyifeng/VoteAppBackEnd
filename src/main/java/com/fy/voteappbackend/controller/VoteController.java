@@ -2,7 +2,7 @@ package com.fy.voteappbackend.controller;
 
 import com.fy.voteappbackend.Tools.CSVTools;
 import com.fy.voteappbackend.Tools.PictureTools;
-import com.fy.voteappbackend.context.AdminsContext;
+import com.fy.voteappbackend.context.UserContext;
 import com.fy.voteappbackend.model.*;
 import com.fy.voteappbackend.service.VoteCountsService;
 import com.fy.voteappbackend.service.VoteParticipationService;
@@ -38,11 +38,11 @@ public class VoteController {
     @ResponseBody
     @PostMapping("/add")
     public GeneralResponse addVote(String title, String content, String[] voteItem, Boolean Public,
-                                   Integer processVisible , Long voteEndDate,MultipartFile picture) throws IOException {
+                                   Integer processVisible , Long voteEndDate,MultipartFile img) throws IOException {
 
         //获取用户uid
-        Integer id = AdminsContext.getCurrentId();
-        if (id == null) {
+        Long uid = UserContext.getCurrentId();
+        if (uid == null) {
             return new GeneralResponse().makeResponse("err","用户uid获取失败");
         }
         //储存投票选项存储文件的绝对路径
@@ -53,7 +53,7 @@ public class VoteController {
         }
 
         //存储图片并返回存储路径
-        String picturePath = PictureTools.savePicture(picture);
+        String picturePath = PictureTools.savePicture(img);
         if (picturePath == null){
             System.out.println("未添加照片或添加照片失败");
         }
@@ -72,11 +72,14 @@ public class VoteController {
         votes.setVoteEndDate(voteEndDate);
         votes.setDate(date);
 
-
-        votesService.VotesAdd(votes);
+        //执行持久化操作将数据项存储下来
+        if (!votesService.VotesAdd(votes,dataPath,uid)){
+            return new GeneralResponse().makeResponse("err","上传失败");
+        }
 
         return new GeneralResponse().makeResponse("ok","上传成功");
     }
+
 
     /**
      * 删除自己的某个投票项
@@ -84,19 +87,18 @@ public class VoteController {
      */
     @ResponseBody
     @PutMapping("/del")
-    public ResponseData<Object> delVote(int voteId){
-
+    public GeneralResponse delVote(int voteId){
+        //获取用户uid
+        Long uid = UserContext.getCurrentId();
         String picturePath = votesService.getVotePicturePath(voteId);
         if (!(picturePath == null)){
             File file = new File(picturePath);
             file.delete();
         }
 
-
-
         votesService.VotesDelete(voteId);
 
-        return ResponseData.ok("success","200");
+        return new GeneralResponse().makeResponse("ok","删除成功");
     }
 
 
@@ -170,16 +172,5 @@ public class VoteController {
         List<Votes> votes = votesService.getVoteItemList();
         return ResponseData.ok(votes,"200");
     }
-
-
-//测试返回数据格式
-//    @ResponseBody
-//    @PostMapping("/test_CSV")
-//    public GeneralRequest<String[]> testCSV() throws IOException {
-//        String[] vote_item ={"0","vote_item0","1","1","vote_item1","1","2","vote_item3","2"};
-//        GeneralRequest<String[]> generalRequest= new GeneralRequest<>();
-//        generalRequest.setData(vote_item);
-//        return generalRequest;
-//    }
 
 }

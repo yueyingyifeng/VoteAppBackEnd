@@ -3,6 +3,7 @@ package com.fy.voteappbackend.service.impl;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.fy.voteappbackend.mapper.VotesMapper;
 import com.fy.voteappbackend.model.VoteApproved;
+import com.fy.voteappbackend.model.VoteResponses;
 import com.fy.voteappbackend.model.Votes;
 import com.fy.voteappbackend.service.VoteApprovedService;
 import com.fy.voteappbackend.service.VotesResponsesService;
@@ -17,6 +18,8 @@ import java.util.List;
 @Data
 @Service
 public class VotesServiceImpl implements VotesService {
+
+
 
     @Autowired
     VoteApprovedService voteApprovedService;
@@ -36,16 +39,31 @@ public class VotesServiceImpl implements VotesService {
      */
     @Transactional
     @Override
-    public int VotesAdd(Votes votes) {
+    public boolean VotesAdd(Votes votes,String dataPath , Long uid) {
 
+        //执行新增选举项的数据插入
+        if (votesMapper.insert(votes) == 0){
+            throw new RuntimeException("新增选举项失败");
+        }
 
-        votesMapper.insert(votes);
+        //执行新增选举项审核状态插入
         VoteApproved voteApproved = new VoteApproved();
         voteApproved.setVoteId(votes.getVoteId());
-//        voteApproved.setApproved();
-//        voteApprovedService.setApproved();
+        voteApproved.setApproved(false);
+        if (voteApprovedService.setApproved(voteApproved) == 0){
+            throw new RuntimeException("设置审核状态失败");
+        }
 
-        return 0;
+        //执行新增投票归属项插入
+        VoteResponses voteResponses = new VoteResponses();
+        voteResponses.setVoteId(votes.getVoteId());
+        voteResponses.setId(uid);
+        voteResponses.setDataPath(dataPath);
+        if (votesResponsesService.addVotesResponses(voteResponses) == 0){
+            throw new RuntimeException("设置数据项失败");
+        }
+
+        return true;
     }
 
     /**

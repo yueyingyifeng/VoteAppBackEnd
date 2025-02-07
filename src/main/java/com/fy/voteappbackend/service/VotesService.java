@@ -1,6 +1,7 @@
 package com.fy.voteappbackend.service;
 
 import com.fy.voteappbackend.model.VoteCounts;
+import com.fy.voteappbackend.model.VoteResponses;
 import com.fy.voteappbackend.model.Votes;
 
 import java.util.ArrayList;
@@ -13,7 +14,7 @@ public interface VotesService {
      * @param votes
      * @return 创建的项数,成功返回1
      */
-    public int VotesAdd(Votes votes);
+    public boolean VotesAdd(Votes votes, String dataPath , Long uid);
 
     /**
      * 编辑投票项

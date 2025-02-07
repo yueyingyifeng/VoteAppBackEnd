@@ -51,8 +51,6 @@ public class JwtTokenAdminInterceptor implements HandlerInterceptor {
                 Claim claims = JWTUtils.getTokenInfo(token).getClaim("uid");
                 String Id = claims.asString();
                 log.info("当前管理员id：{}", Id);
-                AdminsContext.setCurrentId(Integer.valueOf(Id));
-
                 //3、通过，放行
                 return true;
 
