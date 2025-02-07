@@ -2,11 +2,15 @@ package com.fy.voteappbackend.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.fy.voteappbackend.mapper.VotesMapper;
+import com.fy.voteappbackend.model.VoteApproved;
 import com.fy.voteappbackend.model.Votes;
+import com.fy.voteappbackend.service.VoteApprovedService;
+import com.fy.voteappbackend.service.VotesResponsesService;
 import com.fy.voteappbackend.service.VotesService;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -15,15 +19,33 @@ import java.util.List;
 public class VotesServiceImpl implements VotesService {
 
     @Autowired
+    VoteApprovedService voteApprovedService;
+
+    @Autowired
+    VotesResponsesService votesResponsesService;
+
+    @Autowired
+    VoteApprovedService auditService;
+
+    @Autowired
     private VotesMapper votesMapper;
 
     /**
      *添加投票项
      * @return
      */
+    @Transactional
     @Override
-    public int VotesAdd(Votes vo) {
-        return votesMapper.VotesAdd(vo);
+    public int VotesAdd(Votes votes) {
+
+
+        votesMapper.insert(votes);
+        VoteApproved voteApproved = new VoteApproved();
+        voteApproved.setVoteId(votes.getVoteId());
+//        voteApproved.setApproved();
+//        voteApprovedService.setApproved();
+
+        return 0;
     }
 
     /**
@@ -31,6 +53,7 @@ public class VotesServiceImpl implements VotesService {
      * @param votes
      * @return
      */
+
     @Override
     public int VotesUpdate(Votes votes) {
 
@@ -38,10 +61,9 @@ public class VotesServiceImpl implements VotesService {
         updateWrapper.eq("vote_id",votes.getVoteId())
                 .set("title",votes.getTitle())
                 .set("content",votes.getContent())
-                .set("vote_item",votes.getVoteItem())
                 .set("public",votes.getPublic())
                 .set("process_visible",votes.getProcessVisible())
-                .set("picture_path",votes.getPicturePath());
+                .set("img_path",votes.getImgPath());
         int rows = votesMapper.update(votes, updateWrapper);
         return rows;
     }
@@ -81,7 +103,7 @@ public class VotesServiceImpl implements VotesService {
     @Override
     public String getVotePicturePath(int voteId) {
         Votes votes = this.getVote(voteId);
-        return votes.getPicturePath();
+        return votes.getImgPath();
     }
 
     /**

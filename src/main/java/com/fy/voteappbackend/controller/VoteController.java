@@ -1,10 +1,9 @@
 package com.fy.voteappbackend.controller;
 
+import com.fy.voteappbackend.Tools.CSVTools;
 import com.fy.voteappbackend.Tools.PictureTools;
-import com.fy.voteappbackend.model.ResponseData;
-import com.fy.voteappbackend.model.VoteCounts;
-import com.fy.voteappbackend.model.VoteParticipation;
-import com.fy.voteappbackend.model.Votes;
+import com.fy.voteappbackend.context.AdminsContext;
+import com.fy.voteappbackend.model.*;
 import com.fy.voteappbackend.service.VoteCountsService;
 import com.fy.voteappbackend.service.VoteParticipationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +20,7 @@ import java.util.List;
 public class VoteController {
 
 
+
     @Autowired
     private VotesService votesService;
 
@@ -30,32 +30,53 @@ public class VoteController {
     @Autowired
     private VoteParticipationService voteParticipationService;
 
+
     /**
      * 创建一个投票项
      * @return
      */
     @ResponseBody
     @PostMapping("/add")
-    public ResponseData<Integer> addVote(String title, String content, String vote_item, Boolean Public, Integer processVisible ,MultipartFile picture) throws IOException {
+    public GeneralResponse addVote(String title, String content, String[] voteItem, Boolean Public,
+                                   Integer processVisible , Long voteEndDate,MultipartFile picture) throws IOException {
+
+        //获取用户uid
+        Integer id = AdminsContext.getCurrentId();
+        if (id == null) {
+            return new GeneralResponse().makeResponse("err","用户uid获取失败");
+        }
+        //储存投票选项存储文件的绝对路径
+        String dataPath = CSVTools.saveVoteItem(voteItem);
+        assert dataPath != null;
+        if (dataPath.isEmpty()){
+            return new GeneralResponse().makeResponse("err","未创建投票项或创建投票项失败");
+        }
 
         //存储图片并返回存储路径
         String picturePath = PictureTools.savePicture(picture);
         if (picturePath == null){
-            return new ResponseData<Integer>(null,"上次失败");
+            System.out.println("未添加照片或添加照片失败");
         }
+
+        //获取时间戳
+        long date = System.currentTimeMillis();
+
 
         //将数据封装传输到持久化层
         Votes votes = new Votes();
         votes.setTitle(title);
         votes.setContent(content);
-        votes.setVoteItem(vote_item);
         votes.setPublic(Public);
         votes.setProcessVisible(processVisible);
-        votes.setPicturePath(picturePath);
+        votes.setImgPath(picturePath);
+        votes.setVoteEndDate(voteEndDate);
+        votes.setDate(date);
 
-        return new ResponseData<Integer>(votesService.VotesAdd(votes),"上传成功");
+
+        votesService.VotesAdd(votes);
+
+        return new GeneralResponse().makeResponse("ok","上传成功");
     }
-
 
     /**
      * 删除自己的某个投票项
@@ -78,6 +99,8 @@ public class VoteController {
         return ResponseData.ok("success","200");
     }
 
+
+    //TODO 由于vote_counts表删除需要完全重写
     /**
      * 给某项投票
      * @return
@@ -106,7 +129,18 @@ public class VoteController {
      */
     @ResponseBody
     @PostMapping("/edit")
-    public ResponseData<Object> editVote(int voteId,String title, String content, String vote_item, Boolean Public, Integer processVisible ,MultipartFile picture) throws IOException {
+    public ResponseData<Object> editVote(int voteId,String title, String content, String[] vote_item, String Public, Integer processVisible ,MultipartFile picture) throws IOException {
+
+        //将数据封装传输到持久化层
+        Votes votes = new Votes();
+        votes.setTitle(title);
+        votes.setContent(content);
+        votes.setPublic(Boolean.valueOf(Public));
+        votes.setProcessVisible(processVisible);
+        votes.setVoteId(voteId);
+
+
+//        votes.setVoteItem(vote_item);
 
         String picturePath = null;
         //如果用户更改图片，删除存储的照片并存储新的照片
@@ -115,16 +149,7 @@ public class VoteController {
             file.delete();
             picturePath = PictureTools.savePicture(picture);
         }
-
-        //将数据封装传输到持久化层
-        Votes votes = new Votes();
-        votes.setTitle(title);
-        votes.setContent(content);
-        votes.setVoteItem(vote_item);
-        votes.setPublic(Public);
-        votes.setProcessVisible(processVisible);
-        votes.setVoteId(voteId);
-        votes.setPicturePath(picturePath);
+//        votes.setPicturePath(picturePath);
 
         int row = votesService.VotesUpdate(votes);
         if (row == 1) {
@@ -132,6 +157,7 @@ public class VoteController {
         }
         return ResponseData.ok(null,"false");
     }
+
 
 
     /**
@@ -145,16 +171,15 @@ public class VoteController {
         return ResponseData.ok(votes,"200");
     }
 
-    /**
-     * 获取最高赞数投票项
-     * @return
-     */
-    @ResponseBody
-    @GetMapping("/get_mostHot_vote_item_list")
-    public ResponseData<Object> getMostHotVoteItemList(){
-        VoteCounts voteCounts = voteCountsService.getMostHotVoteItemList();
-        System.out.println(voteCounts.toString());
-        Votes votes = votesService.getVote(voteCounts.getVoteId());
-        return ResponseData.ok(votes,"200");
-    }
+
+//测试返回数据格式
+//    @ResponseBody
+//    @PostMapping("/test_CSV")
+//    public GeneralRequest<String[]> testCSV() throws IOException {
+//        String[] vote_item ={"0","vote_item0","1","1","vote_item1","1","2","vote_item3","2"};
+//        GeneralRequest<String[]> generalRequest= new GeneralRequest<>();
+//        generalRequest.setData(vote_item);
+//        return generalRequest;
+//    }
+
 }

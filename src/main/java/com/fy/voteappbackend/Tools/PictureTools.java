@@ -3,8 +3,6 @@ package com.fy.voteappbackend.Tools;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
-import jakarta.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -12,22 +10,11 @@ import java.io.File;
 import java.io.IOException;
 
 //处理图片的工具类
-
-
 @Component
 public class PictureTools {
 
-
     //图片存储路径
-    private static String PhotoUpLoadPath;
-
-    @Value("${picture.upload.path}")
-    private String path;
-
-    @PostConstruct
-    public void init() {
-        PhotoUpLoadPath = path;
-    }
+    private static final String PHOTO_UPLOAD_PATH = "PhotoUpload\\";
 
     /**
      * 存储图片到指定位置
@@ -44,7 +31,6 @@ public class PictureTools {
 
         //获取文件的原始名称
         String pictureName = picture.getOriginalFilename();
-        System.out.printf("pictureName=%s\n", pictureName);
 
         //获取文件的大小
         long size = picture.getSize();
@@ -57,17 +43,22 @@ public class PictureTools {
         String pictureID = id + StrUtil.DOT + pictureType;
 
         //创建文件对象
-        File uploadFile = new File(PhotoUpLoadPath + pictureID);
+        File uploadFile = new File(PHOTO_UPLOAD_PATH + pictureID);
 
-        String picturePath = uploadFile.toString();
+        //使用相对路径时会造成异常，需要先获取文件的绝对路径
+        File dest = new File(uploadFile.getAbsolutePath());
 
-        if (uploadFile.exists()) {
+        //如果使用相对路径创造失败返回null值
+        if (dest.exists()) {
             return null;
         }
 
+        //保存绝对路径
+        String picturePath = dest.toString();
+
         //将文件上传到指定的位置
-        picture.transferTo(uploadFile);
-        System.out.printf("picturePath=%s\n", picturePath);
+        FileUtil.writeBytes(picture.getBytes(),uploadFile.getAbsolutePath());
+
         return picturePath;
     }
 }
