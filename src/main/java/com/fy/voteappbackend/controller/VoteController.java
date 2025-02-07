@@ -1,18 +1,22 @@
 package com.fy.voteappbackend.controller;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.fy.voteappbackend.Tools.CSVTools;
 import com.fy.voteappbackend.Tools.PictureTools;
 import com.fy.voteappbackend.context.UserContext;
 import com.fy.voteappbackend.model.*;
 import com.fy.voteappbackend.service.VoteCountsService;
 import com.fy.voteappbackend.service.VoteParticipationService;
+import jakarta.servlet.ServletContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import com.fy.voteappbackend.service.VotesService;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -30,7 +34,8 @@ public class VoteController {
     @Autowired
     private VoteParticipationService voteParticipationService;
 
-
+    @Autowired
+    private ServletContext servletContext;
     /**
      * 创建一个投票项
      * @return
@@ -131,7 +136,8 @@ public class VoteController {
      */
     @ResponseBody
     @PostMapping("/edit")
-    public ResponseData<Object> editVote(int voteId,String title, String content, String[] vote_item, String Public, Integer processVisible ,MultipartFile picture) throws IOException {
+    public ResponseData<Object> editVote(Integer voteId,String title, String content, String[] voteItem, Boolean Public,
+                                         Integer processVisible , Long voteEndDate,MultipartFile img) throws IOException {
 
         //将数据封装传输到持久化层
         Votes votes = new Votes();
@@ -146,10 +152,10 @@ public class VoteController {
 
         String picturePath = null;
         //如果用户更改图片，删除存储的照片并存储新的照片
-        if (!picture.isEmpty()){
+        if (!img.isEmpty()){
             File file = new File(votesService.getVotePicturePath(voteId));
             file.delete();
-            picturePath = PictureTools.savePicture(picture);
+            picturePath = PictureTools.savePicture(img);
         }
 //        votes.setPicturePath(picturePath);
 
@@ -168,9 +174,20 @@ public class VoteController {
      */
     @ResponseBody
     @GetMapping("/get_vote_item_list")
-    public ResponseData<Object> getVoteItemList(){
+    public GeneralResponse getVoteItemList(){
+        //获取投票项
         List<Votes> votes = votesService.getVoteItemList();
-        return ResponseData.ok(votes,"200");
+        List<Votes> voteItemList = new ArrayList<>();
+
+        //将图片的绝对路径转化为url返回
+        for(Votes vote : votes){
+            vote.setImgPath(PictureTools.imgUrlCreate(vote.getImgPath()));
+            voteItemList.add(vote);
+        }
+
+        JSONObject data = new JSONObject();
+        data.put("data",voteItemList);
+        return new GeneralResponse().addData(data);
     }
 
 }

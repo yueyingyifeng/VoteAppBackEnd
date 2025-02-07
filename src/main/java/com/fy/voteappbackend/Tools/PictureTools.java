@@ -5,16 +5,23 @@ import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 
 //处理图片的工具类
 @Component
 public class PictureTools {
 
     //图片存储路径
-    private static final String PHOTO_UPLOAD_PATH = "PhotoUpload\\";
+    public static final String PHOTO_UPLOAD_PATH = "PhotoUpload\\";
+
+    private static final File file = new File(PHOTO_UPLOAD_PATH);
+
+    //基础URl
+    public static final String baseUrl = "http://localhost:8081";
 
     /**
      * 存储图片到指定位置
@@ -60,5 +67,21 @@ public class PictureTools {
         FileUtil.writeBytes(picture.getBytes(),uploadFile.getAbsolutePath());
 
         return picturePath;
+    }
+
+    public static String getImgAbsolutePath() {
+        return file.getAbsolutePath();
+    }
+
+    public static String imgUrlCreate(String picturePath){
+
+        File file = new File(picturePath);
+
+        String imageUrl = UriComponentsBuilder.fromUri(URI.create(baseUrl))
+                .path("/{id}") // 路径变量
+                .buildAndExpand(file.getName()) // 替换路径变量
+                .toUriString(); // 转换为字符串
+
+        return imageUrl;
     }
 }
