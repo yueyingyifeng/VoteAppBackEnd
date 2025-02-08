@@ -146,6 +146,11 @@ public class VotesServiceImpl implements VotesService {
     }
 
 
+    @Override
+    public List<Votes> getMyVoteItemList(Long uid) {
+        return votesMapper.selectBatchIds(votesResponsesService.getVotesIDbyUid(uid));
+    }
+
 
     /**
      * 根据ID查图片id

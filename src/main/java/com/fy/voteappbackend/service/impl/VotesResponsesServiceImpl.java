@@ -7,6 +7,9 @@ import com.fy.voteappbackend.service.VotesResponsesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 public class VotesResponsesServiceImpl implements VotesResponsesService {
 
@@ -35,5 +38,17 @@ public class VotesResponsesServiceImpl implements VotesResponsesService {
         queryWrapper.eq("vote_id", id);
         int row = votesResponsesMapper.delete(queryWrapper);
         return row;
+    }
+
+    @Override
+    public List<Integer> getVotesIDbyUid(Long uid) {
+        QueryWrapper<VoteResponses> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("id", uid);
+        List<VoteResponses> voteResponses = votesResponsesMapper.selectList(queryWrapper);
+        List<Integer> voteId = new ArrayList<>();
+        for (VoteResponses vote :voteResponses){
+            voteId.add(vote.getVoteId());
+        }
+        return voteId;
     }
 }

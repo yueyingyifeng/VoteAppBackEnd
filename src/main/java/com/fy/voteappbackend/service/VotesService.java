@@ -39,6 +39,12 @@ public interface VotesService {
     public List<Votes> getVoteItemList();
 
     /**
+     * 获取自己的投票项列表
+     * @return
+     */
+    public List<Votes> getMyVoteItemList(Long uid);
+
+    /**
      * 根据id查图片id
      * @param voteId
      * @return

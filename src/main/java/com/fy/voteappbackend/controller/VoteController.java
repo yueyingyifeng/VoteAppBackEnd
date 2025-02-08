@@ -85,13 +85,11 @@ public class VoteController {
         if (!votesService.VotesAdd(votes,dataPath,uid)){
             return new GeneralResponse().makeResponse("err","上传失败");
         }
-        GeneralResponse generalResponse =new GeneralResponse();
-        generalResponse.setType("create_success");
-        generalResponse.setErr("none");
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("data", "success");
-        generalResponse.setData(jsonObject);
-        return generalResponse;
+
+        //封装数据响应请求
+        JSONObject data = new JSONObject();
+        data.put("data", "success");
+        return new GeneralResponse().makeResponse("create_success","none").addData(data);
     }
 
 
@@ -100,25 +98,22 @@ public class VoteController {
      * @return
      */
     @ResponseBody
-    @PutMapping("/del")
-    public GeneralResponse delVote(@RequestBody GeneralRequest<Votes> votesRequest){
+    @GetMapping("/del")
+    public GeneralResponse delVote(@RequestParam Integer vote_id){
 
         //获取用户uid
         Long uid = UserContext.getCurrentId();
         if (uid == null) {
             return new GeneralResponse().makeResponse("err","获取用户id失败");
-        }
-
-        //获取投票项ID
-        int voteId = votesRequest.getData().getVoteId();
+        };
 
         //获取图片文件位置
-        File imgfile = new File(votesService.getVotePicturePath(votesRequest.getData().getVoteId()));
+        File imgfile = new File(votesService.getVotePicturePath(vote_id));
 
         //获取CSV文件位置
-        File dataFile = new File(votesResponsesService.getVotesResponses(voteId).getDataPath());
+        File dataFile = new File(votesResponsesService.getVotesResponses(vote_id).getDataPath());
 
-        if (!votesService.VotesDelete(voteId,uid)){
+        if (!votesService.VotesDelete(vote_id,uid)){
             return new GeneralResponse().makeResponse("del_fail",null);
         }
 
@@ -129,13 +124,10 @@ public class VoteController {
             throw new RuntimeException(e);
         }
 
-
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("data","success");
-        GeneralResponse generalResponse = new GeneralResponse().makeResponse("del_success",null);
-        generalResponse.setErr("none");
-        generalResponse.setData(jsonObject);
-        return generalResponse;
+        //封装数据响应请求
+        JSONObject data = new JSONObject();
+        data.put("data","success");
+        return new GeneralResponse().makeResponse("del_success","none").addData(data);
     }
 
 
@@ -145,14 +137,16 @@ public class VoteController {
      * @return
      */
     @ResponseBody
-    @PatchMapping("/up")
-    public GeneralResponse upVote(@RequestBody GeneralRequest<VoteIndex>request) throws IOException {
+    @GetMapping("/up")
+    public GeneralResponse upVote(@RequestParam Integer vote_id, Integer vote_index) throws IOException {
 
         //获取用户uid
         Long uid = UserContext.getCurrentId();
 
         //获取voteIndex对象
-        VoteIndex voteIndex= request.getData();
+        VoteIndex voteIndex = new VoteIndex();
+        voteIndex.setVote_index(vote_index);
+        voteIndex.setVote_id(vote_id);
 
         //记录投票数据
         VoteParticipation voteParticipation = new VoteParticipation();
@@ -166,7 +160,7 @@ public class VoteController {
         }
 
         //获得CSV文件的绝对路径
-        String dataPath = votesResponsesService.getVotesResponses(voteIndex.getVote_id()).getDataPath();
+        String dataPath = votesResponsesService.getVotesResponses((int)voteIndex.getVote_id()).getDataPath();
 
         //加锁
         //将投票项id作为锁
@@ -190,14 +184,9 @@ public class VoteController {
         }
 
         //封装数据响应请求
-        GeneralResponse generalResponse = new GeneralResponse();
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("data","success");
-        generalResponse.setType("vote_success");
-        generalResponse.setErr("none");
-        generalResponse.setData(jsonObject);
-
-        return generalResponse;
+        JSONObject data = new JSONObject();
+        data.put("data","success");
+        return new GeneralResponse().makeResponse("vote_success","none").addData(data);
     }
 
 
@@ -242,14 +231,11 @@ public class VoteController {
         if (votesService.VotesUpdate(votes) == 0) {
             return new GeneralResponse().makeResponse("err","存储错误");
         }
-        GeneralResponse generalResponse = new GeneralResponse();
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("data","success");
-        generalResponse.setData(jsonObject);
-        generalResponse.setErr("none");
-        generalResponse.setType("edit_success");
 
-        return generalResponse;
+        //封装数据返回页面
+        JSONObject data = new JSONObject();
+        data.put("data","success");
+        return new GeneralResponse().makeResponse("edit_success","none").addData(data);
     }
 
 
@@ -274,11 +260,7 @@ public class VoteController {
         //封装数据返回页面
         JSONObject data = new JSONObject();
         data.put("data",voteItemList);
-        GeneralResponse response = new GeneralResponse();
-        response.addData(data);
-        response.setType("string");
-        response.setTimeStamp(System.currentTimeMillis());
-        return response;
+        return new GeneralResponse().makeResponse("string","none").addData(data);
     }
 
     /**
@@ -287,22 +269,17 @@ public class VoteController {
      */
     @ResponseBody
     @GetMapping("/getVotes")
-    public GeneralResponse getVotes(@RequestBody GeneralRequest<Votes>votesRequest) throws IOException {
+    public GeneralResponse getVotes(@RequestParam Integer voteId) throws IOException {
 
         //获取投票项详情
         VoteResponses voteResponses = votesResponsesService
-                .getVotesResponses(votesRequest.getData().getVoteId());
+                .getVotesResponses(voteId);
         String[][] voteItem = CSVTools.readVoteItemFromCSV(voteResponses.getDataPath());
 
         //封装数据返回页面
         JSONObject data = new JSONObject();
         data.put("data",voteItem);
-        GeneralResponse generalResponse = new GeneralResponse();
-        generalResponse.setTimeStamp(System.currentTimeMillis());
-        generalResponse.addData(data);
-        generalResponse.setType("send_Votes");
-
-        return generalResponse;
+        return new GeneralResponse().makeResponse("send_Votes","none").addData(data);
     }
 
     /**
@@ -317,13 +294,9 @@ public class VoteController {
         List<Votes> list = votesService.getHistoryVote(uid);
 
         //封装信息返回页面
-        GeneralResponse generalResponse = new GeneralResponse();
-        generalResponse.setType("get_history_vote");
-        generalResponse.setTimeStamp(System.currentTimeMillis());
-        generalResponse.setErr("none");
         JSONObject data = new JSONObject();
         data.put("data",list);
-        return generalResponse;
+        return new GeneralResponse().makeResponse("get_history_vote","none").addData(data);
     }
 
     /**
@@ -337,13 +310,29 @@ public class VoteController {
         Long uid = UserContext.getCurrentId();
         List<Votes> list = votesService.getActiveVote(uid);
 
+
         //封装信息返回页面
-        GeneralResponse generalResponse = new GeneralResponse();
-        generalResponse.setType("get_active_vote");
-        generalResponse.setTimeStamp(System.currentTimeMillis());
-        generalResponse.setErr("none");
         JSONObject data = new JSONObject();
         data.put("data",list);
-        return generalResponse;
+        return new GeneralResponse().makeResponse("get_active_vote","none").addData(data);
     }
+
+    /**
+     * 获取自己的投票项列表
+     * @return
+     */
+    @ResponseBody
+    @GetMapping("/getpublishVotes")
+    public GeneralResponse getPublishVotes(){
+        //获取用户uid
+        Long uid = UserContext.getCurrentId();
+
+        List<Votes> list = votesService.getMyVoteItemList(uid);
+
+        //封装信息返回页面
+        JSONObject data = new JSONObject();
+        data.put("data",list);
+        return new GeneralResponse().makeResponse("get_active_vote","none").addData(data);
+    }
+
 }

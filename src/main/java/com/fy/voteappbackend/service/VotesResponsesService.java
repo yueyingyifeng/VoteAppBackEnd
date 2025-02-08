@@ -2,6 +2,8 @@ package com.fy.voteappbackend.service;
 
 import com.fy.voteappbackend.model.VoteResponses;
 
+import java.util.List;
+
 public interface VotesResponsesService {
 
     /**
@@ -23,4 +25,6 @@ public interface VotesResponsesService {
      * @return
      */
     public int deleteVotesResponses(int id);
+
+    public List<Integer> getVotesIDbyUid(Long uid);
 }
