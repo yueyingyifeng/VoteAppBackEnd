@@ -7,12 +7,11 @@ import com.fy.voteappbackend.context.UserContext;
 import com.fy.voteappbackend.model.*;
 import com.fy.voteappbackend.service.VoteCountsService;
 import com.fy.voteappbackend.service.VoteParticipationService;
-import jakarta.servlet.ServletContext;
+import com.fy.voteappbackend.service.VotesResponsesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import com.fy.voteappbackend.service.VotesService;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,17 +24,17 @@ public class VoteController {
 
 
 
+
+
     @Autowired
     private VotesService votesService;
 
     @Autowired
-    private VoteCountsService voteCountsService;
+    private VotesResponsesService votesResponsesService;
 
     @Autowired
     private VoteParticipationService voteParticipationService;
 
-    @Autowired
-    private ServletContext servletContext;
     /**
      * 创建一个投票项
      * @return
@@ -50,8 +49,11 @@ public class VoteController {
         if (uid == null) {
             return new GeneralResponse().makeResponse("err","用户uid获取失败");
         }
+
         //储存投票选项存储文件的绝对路径
-        String dataPath = CSVTools.saveVoteItem(voteItem);
+        String dataPath = CSVTools.createVoteItemIntoCSV();
+        CSVTools.SaveVoteItemIntoCSV(voteItem,dataPath);
+
         assert dataPath != null;
         if (dataPath.isEmpty()){
             return new GeneralResponse().makeResponse("err","未创建投票项或创建投票项失败");
@@ -81,8 +83,13 @@ public class VoteController {
         if (!votesService.VotesAdd(votes,dataPath,uid)){
             return new GeneralResponse().makeResponse("err","上传失败");
         }
-
-        return new GeneralResponse().makeResponse("ok","上传成功");
+        GeneralResponse generalResponse =new GeneralResponse();
+        generalResponse.setType("create_success");
+        generalResponse.setErr("none");
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("data", "success");
+        generalResponse.setData(jsonObject);
+        return generalResponse;
     }
 
 
@@ -92,40 +99,103 @@ public class VoteController {
      */
     @ResponseBody
     @PutMapping("/del")
-    public GeneralResponse delVote(int voteId){
+    public GeneralResponse delVote(@RequestBody GeneralRequest<Votes> votesRequest){
+
         //获取用户uid
         Long uid = UserContext.getCurrentId();
-        String picturePath = votesService.getVotePicturePath(voteId);
-        if (!(picturePath == null)){
-            File file = new File(picturePath);
-            file.delete();
+        if (uid == null) {
+            return new GeneralResponse().makeResponse("err","获取用户id失败");
         }
 
-        votesService.VotesDelete(voteId);
+        //获取投票项ID
+        int voteId = votesRequest.getData().getVoteId();
 
-        return new GeneralResponse().makeResponse("ok","删除成功");
+        //获取图片文件位置
+        File imgfile = new File(votesService.getVotePicturePath(votesRequest.getData().getVoteId()));
+
+        //获取CSV文件位置
+        File dataFile = new File(votesResponsesService.getVotesResponses(voteId).getDataPath());
+
+        if (!votesService.VotesDelete(voteId,uid)){
+            return new GeneralResponse().makeResponse("del_fail",null);
+        }
+
+        try {
+            imgfile.delete();
+            dataFile.delete();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("data","success");
+        GeneralResponse generalResponse = new GeneralResponse().makeResponse("del_success",null);
+        generalResponse.setErr("none");
+        generalResponse.setData(jsonObject);
+        return generalResponse;
     }
 
 
-    //TODO 由于vote_counts表删除需要完全重写
+
     /**
      * 给某项投票
      * @return
      */
     @ResponseBody
     @PatchMapping("/up")
-    public ResponseData<Object> upVote(int uid,int voteId){
+    public GeneralResponse upVote(@RequestBody GeneralRequest<VoteIndex>request) throws IOException {
 
-        //添加一条vote_participation数据
+        //获取用户uid
+        Long uid = UserContext.getCurrentId();
+
+        //获取voteIndex对象
+        VoteIndex voteIndex= request.getData();
+
+        //记录投票数据
         VoteParticipation voteParticipation = new VoteParticipation();
-        voteParticipation.setVote_id(voteId);
+        voteParticipation.setVote_id(voteIndex.getVote_id());
         voteParticipation.setUid(uid);
-        voteParticipationService.addVoteParticipation(voteParticipation);
+        voteParticipation.setDate(System.currentTimeMillis());
 
-        //将投票数加一
-        voteCountsService.voteUp(voteId);
+        //如果返回值为0代表投票记录添加失败
+        if (voteParticipationService.addVoteParticipation(voteParticipation) == 0){
+            return new GeneralResponse().makeResponse("up_fail","投票失败，请不要重复投票");
+        }
 
-        return ResponseData.ok("success","200");
+        //获得CSV文件的绝对路径
+        String dataPath = votesResponsesService.getVotesResponses(voteIndex.getVote_id()).getDataPath();
+
+        //加锁
+        //将投票项id作为锁
+        synchronized (voteIndex.getVote_id()){
+
+            //获取投票项选项详细
+            String[][] voteItem = CSVTools.readVoteItemFromCSV(dataPath);
+            //如果返回值为null则获取投票项失败
+            if (voteItem == null || voteItem.length == 0){
+                return new GeneralResponse().makeResponse("up_fail","获取索引失败");
+            }
+
+            //获取投票项索引
+            int i = voteIndex.getVote_index();
+
+            //投票项数据加1
+            voteItem[i][2] = String.valueOf(Integer.parseInt(voteItem[i][2])+1);
+
+            //存储投票项
+            CSVTools.SaveVoteItemIntoCSV(CSVTools.convert2DTo1D(voteItem),dataPath);
+        }
+
+        //封装数据响应请求
+        GeneralResponse generalResponse = new GeneralResponse();
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("data","success");
+        generalResponse.setType("vote_success");
+        generalResponse.setErr("none");
+        generalResponse.setData(jsonObject);
+
+        return generalResponse;
     }
 
 
@@ -136,19 +206,10 @@ public class VoteController {
      */
     @ResponseBody
     @PostMapping("/edit")
-    public ResponseData<Object> editVote(Integer voteId,String title, String content, String[] voteItem, Boolean Public,
+    public GeneralResponse editVote(Integer voteId,String title, String content, String[] voteItem, Boolean Public,
                                          Integer processVisible , Long voteEndDate,MultipartFile img) throws IOException {
 
-        //将数据封装传输到持久化层
         Votes votes = new Votes();
-        votes.setTitle(title);
-        votes.setContent(content);
-        votes.setPublic(Boolean.valueOf(Public));
-        votes.setProcessVisible(processVisible);
-        votes.setVoteId(voteId);
-
-
-//        votes.setVoteItem(vote_item);
 
         String picturePath = null;
         //如果用户更改图片，删除存储的照片并存储新的照片
@@ -157,13 +218,36 @@ public class VoteController {
             file.delete();
             picturePath = PictureTools.savePicture(img);
         }
-//        votes.setPicturePath(picturePath);
 
-        int row = votesService.VotesUpdate(votes);
-        if (row == 1) {
-            return ResponseData.ok(null, "success");
+        // 如果用户更改投票项，重新存储投票选项到文件中
+        if (voteItem.length != 0){
+            String dataPath = votesResponsesService.getVotesResponses(voteId).getDataPath();
+            if(!CSVTools.SaveVoteItemIntoCSV(voteItem,dataPath)){
+                return new GeneralResponse().makeResponse("edit_fail","存储照片失败");
+            }
         }
-        return ResponseData.ok(null,"false");
+
+        //将数据封装传输到持久化层
+        votes.setImgPath(picturePath);
+        votes.setTitle(title);
+        votes.setContent(content);
+        votes.setPublic(Boolean.valueOf(Public));
+        votes.setProcessVisible(processVisible);
+        votes.setVoteId(voteId);
+        votes.setVoteEndDate(voteEndDate);
+//        votes.setDate(System.currentTimeMillis()); 默认不需要重新设置投票项创建时间
+
+        if (votesService.VotesUpdate(votes) == 0) {
+            return new GeneralResponse().makeResponse("err","存储错误");
+        }
+        GeneralResponse generalResponse = new GeneralResponse();
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("data","success");
+        generalResponse.setData(jsonObject);
+        generalResponse.setErr("none");
+        generalResponse.setType("edit_success");
+
+        return generalResponse;
     }
 
 
@@ -185,9 +269,79 @@ public class VoteController {
             voteItemList.add(vote);
         }
 
+        //封装数据返回页面
         JSONObject data = new JSONObject();
         data.put("data",voteItemList);
-        return new GeneralResponse().addData(data);
+        GeneralResponse response = new GeneralResponse();
+        response.addData(data);
+        response.setType("string");
+        response.setTimeStamp(System.currentTimeMillis());
+        return response;
     }
 
+    /**
+     * 获取投票项详情
+     * @return
+     */
+    @ResponseBody
+    @GetMapping("/getVotes")
+    public GeneralResponse getVotes(@RequestBody GeneralRequest<Votes>votesRequest) throws IOException {
+
+        //获取投票项详情
+        VoteResponses voteResponses = votesResponsesService
+                .getVotesResponses(votesRequest.getData().getVoteId());
+        String[][] voteItem = CSVTools.readVoteItemFromCSV(voteResponses.getDataPath());
+
+        //封装数据返回页面
+        JSONObject data = new JSONObject();
+        data.put("data",voteItem);
+        GeneralResponse generalResponse = new GeneralResponse();
+        generalResponse.setTimeStamp(System.currentTimeMillis());
+        generalResponse.addData(data);
+        generalResponse.setType("send_Votes");
+
+        return generalResponse;
+    }
+
+    /**
+     *查询该用户的历史投票
+     * @return
+     */
+    @ResponseBody
+    @GetMapping("/history_vote")
+    public GeneralResponse getHistoryVote(){
+        //获取用户uid
+        Long uid = UserContext.getCurrentId();
+        List<Votes> list = votesService.getHistoryVote(uid);
+
+        //封装信息返回页面
+        GeneralResponse generalResponse = new GeneralResponse();
+        generalResponse.setType("get_history_vote");
+        generalResponse.setTimeStamp(System.currentTimeMillis());
+        generalResponse.setErr("none");
+        JSONObject data = new JSONObject();
+        data.put("data",list);
+        return generalResponse;
+    }
+
+    /**
+     * 查询该用户正在参与的投票
+     * @return
+     */
+    @ResponseBody
+    @GetMapping("/active_vote")
+    public GeneralResponse getActiveVote(){
+        //获取用户uid
+        Long uid = UserContext.getCurrentId();
+        List<Votes> list = votesService.getActiveVote(uid);
+
+        //封装信息返回页面
+        GeneralResponse generalResponse = new GeneralResponse();
+        generalResponse.setType("get_active_vote");
+        generalResponse.setTimeStamp(System.currentTimeMillis());
+        generalResponse.setErr("none");
+        JSONObject data = new JSONObject();
+        data.put("data",list);
+        return generalResponse;
+    }
 }

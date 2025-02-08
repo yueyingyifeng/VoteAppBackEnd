@@ -15,14 +15,16 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
     @Autowired
     private JwtTokenAdminInterceptor jwtTokenAdminInterceptor;
 
+
+    //TODO 项目完成后删除test路径
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         System.out.println("JWT拦截器启用");
         registry.addInterceptor(jwtTokenAdminInterceptor)
                 .addPathPatterns("/**") // 拦截所有路径
                 .excludePathPatterns("/admins/login")   //排除/admins/login
-                .excludePathPatterns("/user/**")
-                .excludePathPatterns("/admins/test");          //排除/user
+                .excludePathPatterns("/user/**")        //排除/user
+                .excludePathPatterns("/admins/test");
     }
 
     @Override

@@ -8,6 +8,7 @@ import lombok.Data;
 @TableName("vote_participation")
 public class VoteParticipation {
     @TableId("uid")
-    private Integer uid;
+    private Long uid;
     private Integer vote_id;
+    private Long date;
 }

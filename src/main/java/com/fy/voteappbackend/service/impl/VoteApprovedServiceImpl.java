@@ -17,4 +17,10 @@ public class VoteApprovedServiceImpl implements VoteApprovedService {
         int row = voteApprovedMapper.insert(voteApproved);
         return row;
     }
+
+    @Override
+    public int deleteApproved(int voteId) {
+        int row = voteApprovedMapper.deleteById(voteId);
+        return row;
+    }
 }

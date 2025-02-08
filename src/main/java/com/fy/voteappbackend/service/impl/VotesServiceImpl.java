@@ -1,11 +1,13 @@
 package com.fy.voteappbackend.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.fy.voteappbackend.mapper.VotesMapper;
 import com.fy.voteappbackend.model.VoteApproved;
 import com.fy.voteappbackend.model.VoteResponses;
 import com.fy.voteappbackend.model.Votes;
 import com.fy.voteappbackend.service.VoteApprovedService;
+import com.fy.voteappbackend.service.VoteParticipationService;
 import com.fy.voteappbackend.service.VotesResponsesService;
 import com.fy.voteappbackend.service.VotesService;
 import lombok.Data;
@@ -26,6 +28,9 @@ public class VotesServiceImpl implements VotesService {
 
     @Autowired
     VotesResponsesService votesResponsesService;
+
+    @Autowired
+    VoteParticipationService voteParticipationService;
 
     @Autowired
     VoteApprovedService auditService;
@@ -81,7 +86,8 @@ public class VotesServiceImpl implements VotesService {
                 .set("content",votes.getContent())
                 .set("public",votes.getPublic())
                 .set("process_visible",votes.getProcessVisible())
-                .set("img_path",votes.getImgPath());
+                .set("img_path",votes.getImgPath())
+                .set("vote_end_date",votes.getVoteEndDate());
         int rows = votesMapper.update(votes, updateWrapper);
         return rows;
     }
@@ -92,12 +98,40 @@ public class VotesServiceImpl implements VotesService {
      * @return
      */
     @Override
-    public int VotesDelete(int voteId) {
+    @Transactional(rollbackFor = Exception.class)   //开启事务
+    public boolean VotesDelete(int voteId,Long uid) {
+
+        System.out.printf("voteId=%d",voteId);
+        Votes votes = new Votes();
+        votes.setVoteId(voteId);
+
+        if (!votesResponsesService.getVotesResponses(voteId).getId().equals(uid)){
+            System.out.println("运行了");
+            return false;
+        }
+
+        if(votesMapper.deleteById(votes) == 0){
+            throw new RuntimeException("删除审核记录异常");
+        }
+
+        if (voteApprovedService.deleteApproved(voteId) == 0){
+            throw new RuntimeException("删除审核记录异常");
+        }
+
+        if (votesResponsesService.deleteVotesResponses(voteId) == 0){
+            throw new RuntimeException("删除投票选项记录异常");
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean adminsVotesDelete(int voteId) {
         System.out.printf("voteId=%d",voteId);
         Votes votes = new Votes();
         votes.setVoteId(voteId);
         int row  = votesMapper.deleteById(votes);
-        return row;
+        return true;
     }
 
 
@@ -134,5 +168,34 @@ public class VotesServiceImpl implements VotesService {
         return votesMapper.selectById(voteId);
     }
 
+    /**
+     *查询该用户的历史投票
+     * @return
+     */
+    @Override
+    public List<Votes> getHistoryVote(Long uid) {
+        //筛选当现在时间小于截至时间的记录
+        List<Integer> idlist = voteParticipationService.getParticipationVoteIdList(uid);
+
+        QueryWrapper<Votes> queryWrapper = new QueryWrapper<>();
+        queryWrapper.in("vote_id", idlist)
+                .le("vote_end_date",System.currentTimeMillis());
+        return votesMapper.selectList(queryWrapper);
+    }
+
+    /**
+     *查查询该用户正在参与的投票
+     * @return
+     */
+    @Override
+    public List<Votes> getActiveVote(Long uid) {
+        //筛选当现在时间大于截至时间的记录
+        List<Integer> idlist = voteParticipationService.getParticipationVoteIdList(uid);
+        QueryWrapper<Votes> queryWrapper = new QueryWrapper<>();
+        queryWrapper.in("vote_id", idlist)
+                .gt("vote_end_date",System.currentTimeMillis());
+        votesMapper.selectList(queryWrapper);
+        return votesMapper.selectList(queryWrapper);
+    }
 
 }

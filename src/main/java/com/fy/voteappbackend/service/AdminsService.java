@@ -15,7 +15,7 @@ public interface AdminsService {
      * 删除投票项
      * @return
      */
-    public int delVoteById(int uId);
+    public boolean delVoteById(int uId);
 
     /**
      * 删除用户

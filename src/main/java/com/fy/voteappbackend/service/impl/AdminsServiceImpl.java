@@ -66,9 +66,9 @@ public class AdminsServiceImpl implements AdminsService {
      * @return
      */
     @Override
-    public int delVoteById(int uId) {
-        int row = votesService.VotesDelete(uId);
-        return row;
+    public boolean delVoteById(int uId) {
+        boolean b = votesService.adminsVotesDelete(uId);
+        return true;
     }
 
     /**

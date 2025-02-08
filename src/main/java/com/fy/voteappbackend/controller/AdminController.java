@@ -50,9 +50,7 @@ public class AdminController {
             return new GeneralResponse().makeResponse("err", "请求错误");
         }
 
-        int row = adminsService.delVoteById(voteId);
-
-        if (row == 0){
+        if (adminsService.delVoteById(voteId)){
             return new GeneralResponse().makeResponse("delete failed", "删除失败");
         }
 
@@ -79,16 +77,15 @@ public class AdminController {
 
 
     //TODO 删除下述测试代码
-//    @ResponseBody
-//    @PostMapping("/test")
-//    public GeneralRequest<User> test(){
-//        User user = new User();
-//        user.setUid(1);
-//        user.setPsw("12345679");
-//        user.setPhone("456456");
-//        GeneralRequest<User> request = new GeneralRequest<>();
-//        request.setData(user);
-//        return request;
-//    }
+    @ResponseBody
+    @PostMapping("/test")
+    public GeneralRequest<VoteIndex> test(){
+        VoteIndex voteIndex = new VoteIndex();
+        voteIndex.setVote_id(1);
+        voteIndex.setVote_index(1);
+        GeneralRequest<VoteIndex>  generalRequest = new GeneralRequest<VoteIndex>();
+        generalRequest.setData(voteIndex);
+        return generalRequest;
+    }
 
 }
