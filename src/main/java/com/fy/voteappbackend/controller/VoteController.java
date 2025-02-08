@@ -50,6 +50,8 @@ public class VoteController {
             return new GeneralResponse().makeResponse("err","用户uid获取失败");
         }
 
+        voteItem = CSVTools.convertToVoteItemFormat(voteItem);
+
         //储存投票选项存储文件的绝对路径
         String dataPath = CSVTools.createVoteItemIntoCSV();
         CSVTools.SaveVoteItemIntoCSV(voteItem,dataPath);

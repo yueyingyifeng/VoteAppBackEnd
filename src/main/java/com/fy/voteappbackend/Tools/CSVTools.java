@@ -175,4 +175,19 @@ public class CSVTools {
 
         return oneDArray;
     }
+
+    /**
+     * 将投票项设置默认值
+     * @param voteItem
+     * @return
+     */
+    public static String[] convertToVoteItemFormat(String[] voteItem) {
+        String[][] twoDArray = new String[voteItem.length][3];
+        for (int i = 0; i < voteItem.length; i++) {
+            twoDArray[i][0] = String.valueOf(i);
+            twoDArray[i][1] = voteItem[i];
+            twoDArray[i][2] = "0";
+        }
+        return convert2DTo1D(twoDArray);
+    }
 }
