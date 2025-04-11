@@ -158,7 +158,7 @@ public class VoteController {
 
         //记录投票数据
         VoteParticipation voteParticipation = new VoteParticipation();
-        voteParticipation.setVote_id(voteIndex.getVote_id());
+        voteParticipation.setVoteId(voteIndex.getVote_id());
         voteParticipation.setUid(uid);
         voteParticipation.setDate(System.currentTimeMillis());
 
@@ -369,6 +369,46 @@ public class VoteController {
         generalResponse.setErr("none");
         JSONObject data = new JSONObject();
         data.put("data",list);
+        generalResponse.addData(data);
+        return generalResponse;
+    }
+
+    /**
+     * 查询用户发布的投票
+     * @return
+     */
+    @ResponseBody
+    @GetMapping("/count")
+    public GeneralResponse getVoteCount(){
+
+        Integer[] count = new Integer[]{0,0,0};
+
+        //获取用户uid
+        Long uid = UserContext.getCurrentId();
+
+        List<Votes> activeCount = votesService.getActiveVote(uid);
+        List<Votes> publishVotesCount = votesService.getPublishVotes(uid);
+        List<Votes> historyVoteCount = votesService.getHistoryVote(uid);
+
+        for(Votes vote : activeCount){
+            count[0]++;
+        }
+
+        for(Votes vote : publishVotesCount){
+            count[1]++;
+        }
+
+        for(Votes vote : historyVoteCount){
+            count[2]++;
+        }
+
+        //封装信息返回页面
+        GeneralResponse generalResponse = new GeneralResponse();
+        generalResponse.setType("get_count");
+        generalResponse.setTimeStamp(System.currentTimeMillis());
+        generalResponse.setErr("none");
+        JSONObject data = new JSONObject();
+        data.put("data",count);
         generalResponse.addData(data);
         return generalResponse;
     }

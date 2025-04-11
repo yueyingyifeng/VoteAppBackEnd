@@ -1,5 +1,6 @@
 package com.fy.voteappbackend.model;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -9,6 +10,7 @@ import lombok.Data;
 public class VoteParticipation {
     @TableId("uid")
     private Long uid;
-    private Integer vote_id;
+    @TableField("vote_id")
+    private Integer voteId;
     private Long date;
 }

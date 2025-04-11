@@ -184,7 +184,7 @@ public class VotesServiceImpl implements VotesService {
 
         QueryWrapper<Votes> queryWrapper = new QueryWrapper<>();
         queryWrapper.in("vote_id", idlist)
-                .le("vote_end_date",System.currentTimeMillis());
+                .gt("vote_end_date",System.currentTimeMillis());
         return votesMapper.selectList(queryWrapper);
     }
 
@@ -203,7 +203,7 @@ public class VotesServiceImpl implements VotesService {
 
         QueryWrapper<Votes> queryWrapper = new QueryWrapper<>();
         queryWrapper.in("vote_id", idlist)
-                .gt("vote_end_date",System.currentTimeMillis());
+                .le("vote_end_date",System.currentTimeMillis());
         return votesMapper.selectList(queryWrapper);
     }
 

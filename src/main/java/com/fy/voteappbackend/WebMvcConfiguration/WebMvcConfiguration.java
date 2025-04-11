@@ -23,7 +23,8 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
         registry.addInterceptor(jwtTokenAdminInterceptor)
                 .addPathPatterns("/**") // 拦截所有路径
                 .excludePathPatterns("/admins/login")   //排除/admins/login
-                .excludePathPatterns("/user/**")        //排除/user
+                .excludePathPatterns("/user/login")        //排除/login
+                .excludePathPatterns("/user/register")     //排除/register
                 .excludePathPatterns("/admins/test");
     }
 

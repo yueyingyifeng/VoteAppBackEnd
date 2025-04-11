@@ -1,6 +1,8 @@
 package com.fy.voteappbackend.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.fy.voteappbackend.Tools.JWTUtils;
 import com.fy.voteappbackend.mapper.UserAuthMapper;
 import com.fy.voteappbackend.mapper.UserInfoMapper;
@@ -82,6 +84,20 @@ public class UserServiceImpl implements UserService {
             setName(user.getName());
         }});
     }
+
+    @Override
+    public String updatePassword(long uid,String password) {
+        UserAuth userAuth = new UserAuth();
+        userAuth.setUid(uid);
+        userAuth.setPsw(password);
+        int row = userAuthMapper.updateById(userAuth);
+
+        if (row == 0)
+            return "failed";
+
+        return "success";
+    }
+
 
     private String generateToken(User user) throws UnsupportedEncodingException {
         if (user == null)

@@ -38,7 +38,7 @@ public class VoteParticipationServiceImpl implements VoteParticipationService {
         //获取投票项id列表
         List<Integer> votesId = new ArrayList<>();
         for (VoteParticipation voteParticipation : votesList) {
-            votesId.add(voteParticipation.getVote_id());
+            votesId.add(voteParticipation.getVoteId());
         }
 
         return votesId;

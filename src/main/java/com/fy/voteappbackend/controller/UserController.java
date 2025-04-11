@@ -1,15 +1,13 @@
 package com.fy.voteappbackend.controller;
 
 import com.alibaba.fastjson2.JSONObject;
+import com.fy.voteappbackend.context.UserContext;
 import com.fy.voteappbackend.model.GeneralRequest;
 import com.fy.voteappbackend.model.GeneralResponse;
 import com.fy.voteappbackend.model.User;
 import com.fy.voteappbackend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Random;
@@ -67,4 +65,23 @@ public class UserController {
         data.put("token", token);
         return response.makeResponse("ok", "none").addData(data);
     }
+
+    @GetMapping("/changePsw")
+    public GeneralResponse ChangePsw(@RequestParam String password) throws UnsupportedEncodingException {
+
+        //获取用户uid
+        Long uid = UserContext.getCurrentId();
+        if (uid == null) {
+            return new GeneralResponse().makeResponse("err","获取用户id失败");
+        }
+
+        String massage = userService.updatePassword(uid,password);
+
+        GeneralResponse response = new GeneralResponse();
+        JSONObject data = new JSONObject();
+        data.put("token", massage);
+        return response.makeResponse("ok", "none").addData(data);
+    }
+
+
 }
