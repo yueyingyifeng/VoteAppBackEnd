@@ -21,7 +21,7 @@ public class PictureTools {
     private static final File file = new File(PHOTO_UPLOAD_PATH);
 
     //基础URl
-    public static final String baseUrl = "http://localhost:8081";
+    public static final String baseUrl = "http://localhost:8080";
 
     /**
      * 存储图片到指定位置

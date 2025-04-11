@@ -11,7 +11,7 @@ public class Votes {
     private Integer voteId;
     private String title;
     private String content;
-    private Boolean Public;
+    private Integer Public;
     private Integer processVisible;
     private String ImgPath;
     private Long voteEndDate;
