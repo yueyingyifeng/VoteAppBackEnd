@@ -10,5 +10,6 @@ public class UserInfo {
     @TableId
     private Long uid;
     private String phone;
+    private String name;
 }
 

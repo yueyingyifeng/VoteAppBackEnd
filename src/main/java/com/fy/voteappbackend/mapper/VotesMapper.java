@@ -12,10 +12,5 @@ import java.util.List;
 @Mapper
 public interface VotesMapper extends BaseMapper<Votes> {
 
-    @Insert("INSERT INTO votes (title, content, vote_item, public, process_visible, picture_path) " +
-            "VALUES" +
-            "(#{title},#{content},#{voteItem},#{Public},#{processVisible},#{picturePath})")
-    public int VotesAdd(Votes vo);
-
 
 }

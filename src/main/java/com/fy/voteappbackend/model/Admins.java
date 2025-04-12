@@ -6,11 +6,10 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 @Data
-@TableName("vote_participation")
-public class VoteParticipation {
-    @TableId("uid")
-    private Long uid;
-    @TableField("vote_id")
-    private Integer voteId;
-    private Long date;
+@TableName("admins")
+public class Admins {
+    @TableField("id")
+    private Integer id;
+    @TableField("psw")
+    private String psw;
 }

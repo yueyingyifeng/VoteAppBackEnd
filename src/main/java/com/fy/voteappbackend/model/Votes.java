@@ -11,8 +11,9 @@ public class Votes {
     private Integer voteId;
     private String title;
     private String content;
-    private String voteItem;
-    private Boolean Public;
+    private Integer Public;
     private Integer processVisible;
-    private String picturePath;
+    private String ImgPath;
+    private Long voteEndDate;
+    private Long date;
 }

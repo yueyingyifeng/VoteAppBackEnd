@@ -35,4 +35,8 @@ build/
 
 ### other ###
 src/main/resources/*
-src/main/java/com/fy/voteappbackend/PhotoUpload/*
+
+### test ###
+PhotoUpload/*
+CSVUpload/*
+.history/*

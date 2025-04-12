@@ -7,4 +7,5 @@ public class User {
     long uid;
     String psw;
     String phone;
+    String name;
 }
