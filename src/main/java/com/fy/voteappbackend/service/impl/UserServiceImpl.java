@@ -85,20 +85,6 @@ public class UserServiceImpl implements UserService {
         }});
     }
 
-    @Override
-    public String updatePassword(long uid,String password) {
-        UserAuth userAuth = new UserAuth();
-        userAuth.setUid(uid);
-        userAuth.setPsw(password);
-        int row = userAuthMapper.updateById(userAuth);
-
-        if (row == 0)
-            return "failed";
-
-        return "success";
-    }
-
-
     private String generateToken(User user) throws UnsupportedEncodingException {
         if (user == null)
             return null;
@@ -110,4 +96,24 @@ public class UserServiceImpl implements UserService {
 
         return JWTUtils.getToken(claims);
     }
+
+    @Override
+    public String updatePassword(long uid, String oldPassword, String newPassword){
+
+        if (!oldPassword.equals(userAuthMapper.selectById(uid).getPsw())){
+            return "old_password_wrong";
+        };
+
+        UserAuth userAuth = new UserAuth();
+        userAuth.setUid(uid);
+        userAuth.setPsw(newPassword);
+        int row = userAuthMapper.updateById(userAuth);
+
+        if (row == 0)
+            return "failed";
+
+        return "success";
+    }
+
 }
+
