@@ -11,5 +11,6 @@ public interface UserService {
     //返回的 token
     String register(User user) throws UnsupportedEncodingException;
 
-    String updatePassword(long uid,String password) throws UnsupportedEncodingException;
+    String updatePassword(long uid,String oldPassword,String newPassword);
+
 }
