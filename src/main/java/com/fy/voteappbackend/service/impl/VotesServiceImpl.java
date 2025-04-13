@@ -132,7 +132,7 @@ public class VotesServiceImpl implements VotesService {
         Votes votes = new Votes();
         votes.setVoteId(voteId);
         int row  = votesMapper.deleteById(votes);
-        return true;
+        return row > 0;
     }
 
 

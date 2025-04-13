@@ -4,5 +4,5 @@ import lombok.Data;
 
 @Data
 public class VoteAndOrder extends Votes{
-    private int order;
+    private Integer order;
 }

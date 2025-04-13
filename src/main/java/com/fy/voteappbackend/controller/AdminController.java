@@ -60,10 +60,10 @@ public class AdminController {
     @GetMapping("/pass")
     public GeneralResponse passVote(@RequestParam Integer id){
 
-        //审核管理员权限
-        if (AdminsContext.getCurrentId() == null){
-            return new GeneralResponse().makeResponse("failure", "No authorization");
-        }
+//        //审核管理员权限
+//        if (AdminsContext.getCurrentId() == null){
+//            return new GeneralResponse().makeResponse("failure", "No authorization");
+//        }
 
         JSONObject jsonObject =new JSONObject();
         jsonObject.put("data",auditService.passVote(id));
@@ -79,10 +79,10 @@ public class AdminController {
     @ResponseBody
     @GetMapping("/not_pass")
     public GeneralResponse notPassVote(@RequestParam int id){
-        //审核管理员权限
-        if (AdminsContext.getCurrentId() == null){
-            return new GeneralResponse().makeResponse("failure", "No authorization");
-        }
+//        //审核管理员权限
+//        if (AdminsContext.getCurrentId() == null){
+//            return new GeneralResponse().makeResponse("failure", "No authorization");
+//        }
 
         JSONObject jsonObject =new JSONObject();
         jsonObject.put("data",auditService.notPassVote(id));
@@ -91,16 +91,16 @@ public class AdminController {
     }
 
     /**
-     * 获取所有通过的投票项
+     * 获取所有通过审核的投票项
      * @return
      */
     @ResponseBody
     @GetMapping("/get_pass_vote")
     public GeneralResponse getPassVote(){
-        //审核管理员权限
-        if (AdminsContext.getCurrentId() == null){
-            return new GeneralResponse().makeResponse("failure", "No authorization");
-        }
+//        //审核管理员权限
+//        if (AdminsContext.getCurrentId() == null){
+//            return new GeneralResponse().makeResponse("failure", "No authorization");
+//        }
 
         List<Votes> votesList = new ArrayList<>();
 
@@ -117,16 +117,16 @@ public class AdminController {
     }
 
     /**
-     * 获取所有未通过的投票项
+     * 获取所有未通过审核的投票项
      * @return
      */
     @ResponseBody
     @GetMapping("get_not_pass_vote")
     public GeneralResponse getNotPassVote(){
-        //审核管理员权限
-        if (AdminsContext.getCurrentId() == null){
-            return new GeneralResponse().makeResponse("failure", "No authorization");
-        }
+//        //审核管理员权限
+//        if (AdminsContext.getCurrentId() == null){
+//            return new GeneralResponse().makeResponse("failure", "No authorization");
+//        }
 
         List<Votes> votesList = new ArrayList<>();
 
@@ -143,11 +143,11 @@ public class AdminController {
     }
 
     /**
-     * 获取所有投票项,合格的和不合格的
+     * 获取所有投票项,通过审核和没有通过审核的
      * @return
      */
     @ResponseBody
-    @GetMapping()
+    @GetMapping("/get_allVotes")
     public GeneralResponse getAllVote(){
         //获取投票项
         List<Votes> votes = votesService.getVoteItemList();
@@ -168,13 +168,13 @@ public class AdminController {
 
     /**
      * 删除投票项
-     * @param votesGeneralRequest
+     * @param delVoteID
      * @return
      */
     @ResponseBody
-    @PostMapping("/del_vote")
-    public GeneralResponse delVoteById(@RequestBody GeneralRequest<Votes> votesGeneralRequest){
-        Integer voteId = votesGeneralRequest.getData().getVoteId();
+    @GetMapping("/del_vote")
+    public GeneralResponse delVoteById(@RequestParam Integer delVoteID){
+        Integer voteId = delVoteID;
         if (voteId == null){
             return new GeneralResponse().makeResponse("err", "请求错误");
         }
