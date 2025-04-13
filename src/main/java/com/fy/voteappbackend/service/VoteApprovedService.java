@@ -9,12 +9,12 @@ public interface VoteApprovedService {
      * 设置是否审核通过
      * @return
      */
-    public int setApproved(VoteApproved vo);
+    int setApproved(VoteApproved vo);
 
     /**
      * 删除审核项
      * @param voteId
      * @return
      */
-    public int deleteApproved(int voteId);
+    int deleteApproved(int voteId);
 }
