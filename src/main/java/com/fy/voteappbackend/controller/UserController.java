@@ -80,7 +80,7 @@ public class UserController {
         return response.makeResponse("ok", "none").addData(data);
     }
 
-    @GetMapping("/changePsw")
+    @PostMapping("/changePsw")
     public GeneralResponse ChangePsw(@RequestParam String oldPassword,@RequestParam String newPassword){
 
         //获取用户uid
@@ -108,6 +108,7 @@ public class UserController {
 
         //获取该用户指定存储头像文件地址
         Optional<Path> foundFile = findFileByNameWithoutExtension(String.valueOf(uid));
+
 
         //如果用户已经上传文件则删除之前文件
         foundFile.ifPresentOrElse(

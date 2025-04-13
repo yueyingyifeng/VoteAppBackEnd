@@ -140,7 +140,7 @@ public class PictureTools {
     }
 
     public static Optional<Path> findFileByNameWithoutExtension(String baseName) throws IOException {
-        Path directory = Path.of(file.getParentFile().getAbsolutePath());
+        Path directory = Path.of(getImgAbsolutePath());
         System.out.println(directory.toString());
         return Files.list(directory)
                 .filter(path -> {

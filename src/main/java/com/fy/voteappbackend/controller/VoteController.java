@@ -5,7 +5,6 @@ import com.fy.voteappbackend.Tools.CSVTools;
 import com.fy.voteappbackend.Tools.PictureTools;
 import com.fy.voteappbackend.context.UserContext;
 import com.fy.voteappbackend.model.*;
-import com.fy.voteappbackend.service.VoteCountsService;
 import com.fy.voteappbackend.service.VoteParticipationService;
 import com.fy.voteappbackend.service.VotesResponsesService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -412,6 +411,8 @@ public class VoteController {
         generalResponse.addData(data);
         return generalResponse;
     }
+
+
 
     
 }

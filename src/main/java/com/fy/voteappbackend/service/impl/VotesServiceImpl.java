@@ -175,7 +175,7 @@ public class VotesServiceImpl implements VotesService {
      */
     @Override
     public List<Votes> getHistoryVote(Long uid) {
-        //筛选当现在时间小于截至时间的记录
+        //获取参与了的投票项
         List<Integer> idlist = voteParticipationService.getParticipationVoteIdList(uid);
         
         if (idlist == null || idlist.isEmpty()) {
@@ -183,8 +183,7 @@ public class VotesServiceImpl implements VotesService {
         }
 
         QueryWrapper<Votes> queryWrapper = new QueryWrapper<>();
-        queryWrapper.in("vote_id", idlist)
-                .gt("vote_end_date",System.currentTimeMillis());
+        queryWrapper.in("vote_id", idlist);
         return votesMapper.selectList(queryWrapper);
     }
 
@@ -194,7 +193,7 @@ public class VotesServiceImpl implements VotesService {
      */
     @Override
     public List<Votes> getActiveVote(Long uid) {
-        //筛选当现在时间大于截至时间的记录
+        //筛选当现在时间小于截至时间的记录
         List<Integer> idlist = voteParticipationService.getParticipationVoteIdList(uid);
         
         if (idlist == null || idlist.isEmpty()) {
@@ -228,6 +227,17 @@ public class VotesServiceImpl implements VotesService {
         QueryWrapper<Votes> votesQueryWrapper = new QueryWrapper<>();
         votesQueryWrapper.in("vote_id", voteIds);
         return votesMapper.selectList(votesQueryWrapper);
+    }
+
+    /**
+     * 根据id列表查询
+     *
+     * @param voteIdList
+     * @return
+     */
+    @Override
+    public List<Votes> selectBatchIdsForVote(List<Integer> voteIdList) {
+        return votesMapper.selectBatchIds(voteIdList);
     }
 
 }

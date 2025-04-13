@@ -12,7 +12,7 @@ public interface VoteParticipationService{
      * @param voteParticipation
      * @return
      */
-    public int addVoteParticipation(VoteParticipation voteParticipation);
+    int addVoteParticipation(VoteParticipation voteParticipation);
 
 
     /**
@@ -20,7 +20,7 @@ public interface VoteParticipationService{
      * @param uid
      * @return
      */
-    public List<Integer> getParticipationVoteIdList(Long uid);
+    List<Integer> getParticipationVoteIdList(Long uid);
 
 
 }
