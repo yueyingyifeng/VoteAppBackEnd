@@ -3,11 +3,13 @@ package com.fy.voteappbackend.controller;
 import com.alibaba.fastjson2.JSONObject;
 import com.fy.voteappbackend.Tools.CSVTools;
 import com.fy.voteappbackend.Tools.PictureTools;
+import com.fy.voteappbackend.constent.VotesConstant;
 import com.fy.voteappbackend.context.UserContext;
 import com.fy.voteappbackend.model.*;
+import com.fy.voteappbackend.service.AuditService;
 import com.fy.voteappbackend.service.VoteParticipationService;
 import com.fy.voteappbackend.service.VotesResponsesService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import com.fy.voteappbackend.service.VotesService;
@@ -15,25 +17,29 @@ import com.fy.voteappbackend.service.VotesService;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/vote")
 public class VoteController {
 
-
-
-
-
-    @Autowired
     private VotesService votesService;
-
-    @Autowired
     private VotesResponsesService votesResponsesService;
-
-    @Autowired
     private VoteParticipationService voteParticipationService;
+    private AuditService auditService;
 
+
+    VoteController(VotesService votesService,
+                   VotesResponsesService votesResponsesService,
+                   VoteParticipationService voteParticipationService,
+                   AuditService auditService){
+        this.votesService = votesService;
+        this.votesResponsesService = votesResponsesService;
+        this.voteParticipationService = voteParticipationService;
+        this.auditService = auditService;
+    }
     /**
      * 创建一个投票项
      * @return
@@ -261,25 +267,59 @@ public class VoteController {
      */
     @ResponseBody
     @GetMapping("/get_vote_item_list")
-    public GeneralResponse getVoteItemList(){
-        //获取投票项
-        List<Votes> votes = votesService.getVoteItemList();
-        List<Votes> voteItemList = new ArrayList<>();
+    public GeneralResponse getVoteItemList() throws IOException {
+        //首先获取所有通过审核的投票项,然后获取存储投票数量文件.收集投票，将图片的绝对路径转化为url.配对存储到pairs中.最后排序.
 
-        //将图片的绝对路径转化为url返回
-        for(Votes vote : votes){
+        List<Pair<Votes, Integer>> pairs = new ArrayList<>();
+        List<Votes> votesList = new ArrayList<>();
+        List<VoteAndOrder> voteAndOrderList = new ArrayList<>();
+
+        for(Votes vote : votesService.selectBatchIdsForVote(auditService.getIfPassOrElseVoteId(VotesConstant.APPROVED))){
+
+            //获取投票数存储文件并转化为二维字符串数组存储
+            String[][] numberOfVotes = CSVTools.readVoteItemFromCSV(votesResponsesService
+                    .getVotesResponses(vote.getVoteId()).getDataPath());
+
+            //统计投票数
+            int count = 0;
+            assert numberOfVotes != null;
+            for (String[] strings : numberOfVotes){
+                count += Integer.parseInt(strings[2]);
+            }
+
+            //将图片的绝对路径转化为url返回
             vote.setImgPath(PictureTools.imgUrlCreate(vote.getImgPath()));
-            voteItemList.add(vote);
+
+            pairs.add(Pair.of(vote,count));
+
+            votesList.add(vote);
         }
 
-        //封装数据返回页面
-        JSONObject data = new JSONObject();
-        data.put("data",voteItemList);
-        GeneralResponse response = new GeneralResponse();
-        response.addData(data);
-        response.setType("string");
-        response.setTimeStamp(System.currentTimeMillis());
-        return response;
+        pairs.sort(Map.Entry.comparingByValue(Comparator.reverseOrder()));
+
+        for (Pair<Votes, Integer> pair : pairs){
+
+            VoteAndOrder voteAndOrder = new VoteAndOrder();
+
+            Votes voteCache = pair.getKey();
+
+            voteAndOrder.setVoteId(voteCache.getVoteId());
+            voteAndOrder.setDate(voteCache.getDate());
+            voteAndOrder.setContent(voteCache.getContent());
+            voteAndOrder.setPublic(voteCache.getPublic());
+            voteAndOrder.setProcessVisible(voteCache.getProcessVisible());
+            voteAndOrder.setVoteEndDate(voteCache.getVoteEndDate());
+            voteAndOrder.setTitle(voteCache.getTitle());
+            voteAndOrder.setImgPath(voteCache.getImgPath());
+
+            voteAndOrder.setOrder(pair.getValue());
+            voteAndOrderList.add(voteAndOrder);
+        }
+
+        JSONObject jsonObject =new JSONObject();
+        jsonObject.put("data",voteAndOrderList);
+
+        return new GeneralResponse().makeResponse("ok", "none").addData(jsonObject);
     }
 
     /**
@@ -412,7 +452,4 @@ public class VoteController {
         return generalResponse;
     }
 
-
-
-    
 }

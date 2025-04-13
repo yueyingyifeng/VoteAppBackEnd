@@ -2,6 +2,7 @@ package com.fy.voteappbackend.controller;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.fy.voteappbackend.Tools.PictureTools;
+import com.fy.voteappbackend.constent.VotesConstant;
 import com.fy.voteappbackend.context.AdminsContext;
 import com.fy.voteappbackend.model.*;
 import com.fy.voteappbackend.service.AdminsService;
@@ -21,9 +22,6 @@ public class AdminController {
     AdminsService adminsService;
     VotesService votesService;
     AuditService auditService;
-
-    private static final Integer APPROVED = 1;
-    private static final Integer NOT_APPROVED = 0;
 
     AdminController(AdminsService adminsService, VotesService votesService, AuditService auditService){
         this.adminsService = adminsService;
@@ -60,7 +58,8 @@ public class AdminController {
      */
     @ResponseBody
     @GetMapping("/pass")
-    public GeneralResponse passVote(@RequestParam int id){
+    public GeneralResponse passVote(@RequestParam Integer id){
+
         //审核管理员权限
         if (AdminsContext.getCurrentId() == null){
             return new GeneralResponse().makeResponse("failure", "No authorization");
@@ -106,7 +105,7 @@ public class AdminController {
         List<Votes> votesList = new ArrayList<>();
 
         //将图片的绝对路径转化为url返回
-        for(Votes vote : votesService.selectBatchIdsForVote(auditService.getIfPassOrElseVoteId(APPROVED))){
+        for(Votes vote : votesService.selectBatchIdsForVote(auditService.getIfPassOrElseVoteId(VotesConstant.APPROVED))){
             vote.setImgPath(PictureTools.imgUrlCreate(vote.getImgPath()));
             votesList.add(vote);
         }
@@ -132,7 +131,7 @@ public class AdminController {
         List<Votes> votesList = new ArrayList<>();
 
         //将图片的绝对路径转化为url返回
-        for(Votes vote : votesService.selectBatchIdsForVote(auditService.getIfPassOrElseVoteId(NOT_APPROVED))){
+        for(Votes vote : votesService.selectBatchIdsForVote(auditService.getIfPassOrElseVoteId(VotesConstant.NOT_APPROVED))){
             vote.setImgPath(PictureTools.imgUrlCreate(vote.getImgPath()));
             votesList.add(vote);
         }
@@ -144,7 +143,7 @@ public class AdminController {
     }
 
     /**
-     * 获取所有投票项
+     * 获取所有投票项,合格的和不合格的
      * @return
      */
     @ResponseBody

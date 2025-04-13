@@ -62,6 +62,7 @@ public class AuditServiceImpl implements AuditService {
      */
     @Override
     public List<Integer> getIfPassOrElseVoteId(Integer approved) {
+
         QueryWrapper<Audit> auditWrapper = new QueryWrapper<>();
         auditWrapper.eq("approved",approved);
         List<Audit> AuditList =  auditMapper.selectList(auditWrapper);
@@ -69,7 +70,8 @@ public class AuditServiceImpl implements AuditService {
         for(Audit audit : AuditList){
             passVoteIds.add(audit.getVoteId());
         }
-        return List.of();
+
+        return passVoteIds;
     }
 
 
