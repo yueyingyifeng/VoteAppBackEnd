@@ -1,6 +1,7 @@
 package com.fy.voteappbackend.controller;
 
 import com.alibaba.fastjson2.JSONObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fy.voteappbackend.Tools.CSVTools;
 import com.fy.voteappbackend.Tools.PictureTools;
 import com.fy.voteappbackend.constent.VotesConstant;
@@ -16,10 +17,7 @@ import com.fy.voteappbackend.service.VotesService;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @RequestMapping("/vote")
@@ -46,7 +44,7 @@ public class VoteController {
      */
     @ResponseBody
     @PostMapping("/add")
-    public GeneralResponse addVote(String title, String content, String[] voteItem, Integer Public,
+    public GeneralResponse addVote(String title, String content, String voteItem, Integer Public,
                                    Integer processVisible , Long voteEndDate,MultipartFile img) throws IOException {
 
         //获取用户uid
@@ -54,12 +52,19 @@ public class VoteController {
         if (uid == null) {
             return new GeneralResponse().makeResponse("err","用户uid获取失败");
         }
+        String[] voteItems = new ObjectMapper().readValue(voteItem, String[].class); // 修复微信端传来的数组无法解析问题
+        /*
+        2025年5月1日
+        可能的原因就是 uni.uploadFile 无法传递复杂的 formData 数据，所以先序列化成字符串传输，再组合回数组即可
+        该问题在 Uniapp 中没有出现，但编译到微信小程序就发生了
+         */
 
-        voteItem = CSVTools.convertToVoteItemFormat(voteItem);
+
+        voteItems = CSVTools.convertToVoteItemFormat(voteItems);
 
         //储存投票选项存储文件的绝对路径
         String dataPath = CSVTools.createVoteItemIntoCSV();
-        CSVTools.SaveVoteItemIntoCSV(voteItem,dataPath);
+        CSVTools.SaveVoteItemIntoCSV(voteItems,dataPath);
 
         assert dataPath != null;
         if (dataPath.isEmpty()){
